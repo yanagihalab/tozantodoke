@@ -11,6 +11,7 @@ import SummitQRCode from "./SummitQRCode";
 import SummitForm from "./SummitForm";
 import ContractTestPage from './ContractTestPage.jsx';
 import AllContractMessagesPage from "./AllContractMessagesPage";
+import ClimbingInfoViewer from './ClimbingInfoViewer';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
       <Route path="/summit-form" element={<SummitForm />} />
       <Route path="/contract-test" element={<ContractTestPage />} /> {/* コントラクトのテストページ */}
       <Route path="/all-contract-messages" element={<AllContractMessagesPage />} />
+      <Route path="/ClimbingInfoViewer" element={<ClimbingInfoViewer />} />
     </Routes>
   );
 }

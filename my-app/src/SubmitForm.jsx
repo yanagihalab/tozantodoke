@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 
-const CONTRACT_ADDRESS = "neutron1mkyz6g9dvgxs4m6wp65v030nmxduzmlf4a85v45jmg9jcz5h6klskzrtqw";
+const CONTRACT_ADDRESS = "neutron172mv76k3y6ffdfs0x3v6mezu3ecg0wvc8gq5zm5m57tz3etvwwdq3cpfyr";
 const RPC_ENDPOINT = "https://rpc-palvus.pion-1.ntrn.tech";
 const CHAIN_ID = "pion-1";
 
@@ -65,15 +65,16 @@ function SubmitForm() {
     const offlineSigner = window.keplr.getOfflineSigner(CHAIN_ID);
     const client = await SigningCosmWasmClient.connectWithSigner(RPC_ENDPOINT, offlineSigner);
 
-    const startTimestamp = (new Date(climbDate).getTime() * 1_000_000).toString();
-    const scheduledReturnTimestamp = (new Date(returnDate).getTime() * 1_000_000).toString();
+    // UNIX秒に変換 (ナノ秒やミリ秒ではない)
+    const startTimestamp = Math.floor(new Date(climbDate).getTime() / 1000).toString();
+    const scheduledReturnTimestamp = Math.floor(new Date(returnDate).getTime() / 1000).toString();
 
     const msg = {
       submit_climbing_info: {
         mountain,
         start_date: startTimestamp,
         scheduled_return_date: scheduledReturnTimestamp,
-        deposit_amount: depositValue,
+        deposit_amount: depositValue.toString(), 
         deposit_denom: depositDenom,
       },
     };
@@ -86,6 +87,7 @@ function SubmitForm() {
       alert("エラーが発生しました：" + error.message);
     }
   };
+
 
   return (
     <div>
@@ -122,14 +124,15 @@ function SubmitForm() {
       </label>
 
       <label>
-        デポジット額:
+        デポジット額: <span>{depositDenom}</span>
         <input
           type="number"
           value={depositValue}
           onChange={(e) => setDepositValue(e.target.value)}
-        />
-        <span>{depositDenom}</span>
+        />        
       </label>
+
+      <br />
 
       <button type="button" onClick={handleClimbSubmit}>
         入山届を提出

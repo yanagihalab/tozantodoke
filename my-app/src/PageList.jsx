@@ -15,6 +15,7 @@ function PageList() {
         <li><Link to="/ipfs-upload">IPFS画像アップロード</Link></li>
         <li><Link to="/contract-test">コントラクトテストページ1</Link></li>
         <li><Link to="/all-contract-messages">コントラクトテストページ2</Link></li>
+        <li><Link to="/ClimbingInfoViewer">トランザクション確認</Link></li>
       </ul>
     </div>
   );

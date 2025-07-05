@@ -121,13 +121,13 @@ tx: null
 txhash: 676DEE9F2890579C975390E147B156C52D1CC9BB5542BB858AF0557DBD758D78
 
 
-neutrond tx wasm instantiate 12258 '{}' \
-  --label "ClimbingNFTContract" \
+neutrond tx wasm instantiate 12263 '{}' \
+  --label "ClimbingNFTContractV2" \
   --admin neutron1ahx6kfl8x9ay8p09k7jgltkywatm8qvxfrguvd \
   --from neutron1ahx6kfl8x9ay8p09k7jgltkywatm8qvxfrguvd \
   --gas auto \
   --gas-adjustment 1.5 \
-  --fees 9000untrn -y \
+  --fees 9500untrn -y \
   --chain-id pion-1 \
   --node https://rpc-palvus.pion-1.ntrn.tech
 
@@ -136,3 +136,43 @@ contract address is "neutron1pl9ex24yh67l7atm4sz7j2rzs29my0p6qnxsc9nlmyaaqy2s9az
 
 -- ClimbingNFTContractV1
 contract address is "neutron1mkyz6g9dvgxs4m6wp65v030nmxduzmlf4a85v45jmg9jcz5h6klskzrtqw"
+
+-- ClimbingNFTContractV2
+contract address is "neutron1432vywmgcxl50enpr8e8ytvquamtqq78xwmghcfa67p5legvzwyqac6qdz"
+
+
+-- ClimbingNFTContractV3
+contract address is "neutron172mv76k3y6ffdfs0x3v6mezu3ecg0wvc8gq5zm5m57tz3etvwwdq3cpfyr"
+
+スマートコントラクトで入山情報が本当に保存されているか.
+neutrond query wasm contract-state smart "neutron172mv76k3y6ffdfs0x3v6mezu3ecg0wvc8gq5zm5m57tz3etvwwdq3cpfyr" '{"get_climbing_info": {"climber": "neutron1ahx6kfl8x9ay8p09k7jgltkywatm8qvxfrguvd"}}'  --node https://rpc-palvus.pion-1.ntrn.tech
+
+
+{
+  "mountain": "北横岳",
+  "start_date": "1751587200",
+  "scheduled_return_date": "1751673600",
+  "deposit_amount": "100",
+  "deposit_denom": "utrn"
+}
+
+{
+  "submit_climbing_info": {
+    "mountain": "北横岳",
+    "start_date": "1751587200",
+    "scheduled_return_date": "1751673600",
+    "deposit_amount": "100",
+    "deposit_denom": "utrn"
+  }
+}
+
+neutrond query wasm contract-state all \
+  neutron172mv76k3y6ffdfs0x3v6mezu3ecg0wvc8gq5zm5m57tz3etvwwdq3cpfyr \
+  --node https://rpc-palvus.pion-1.ntrn.tech
+
+```一覧表示
+neutrond query wasm contract-state all \
+  neutron172mv76k3y6ffdfs0x3v6mezu3ecg0wvc8gq5zm5m57tz3etvwwdq3cpfyr \
+  --node https://rpc-palvus.pion-1.ntrn.tech \
+  --output json | jq -r '.models[].value' | base64 -d | jq .
+```

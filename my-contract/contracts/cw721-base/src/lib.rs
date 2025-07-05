@@ -9,9 +9,9 @@ use crate::msg::{
     InstantiateMsg, ExecuteMsg, QueryMsg, ClimbingInfoResponse, ActiveClimbsResponse,
     AllClimbsResponse, DepositStatusResponse, WarningInfoResponse,
 };
-use cw_storage_plus::Bound;
 use crate::state::{ClimbingInfo, CLIMBING_INFOS, NFTS, NftInfo, WARNINGS, WarningInfo};
 use crate::error::ContractError;
+use cw_storage_plus::{Bound, PrefixBound}; // ここに追加
 
 #[entry_point]
 pub fn instantiate(
@@ -132,34 +132,28 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetClimbingInfo { climber } => {
             let climber_addr = deps.api.addr_validate(&climber)?;
 
-            // (Addr, "")から(Addr, "zzzzzzzz")までを範囲検索し、すべての山を含める
+            // climber_addrだけをprefixとして指定
             let prefix = CLIMBING_INFOS.prefix_range(
                 deps.storage,
-                Some(cw_storage_plus::PrefixBound::inclusive((climber_addr.clone(), "".to_string()))),
-                Some(cw_storage_plus::PrefixBound::inclusive((climber_addr.clone(), "zzzzzzzz".to_string()))),
+                Some(PrefixBound::inclusive((climber_addr.clone(), "".to_string()))),
+                Some(PrefixBound::inclusive((climber_addr.clone(), "zzzzzzzzzz".to_string()))),
                 Order::Descending,
             );
 
             let info = prefix
                 .take(1)
+                .map(|item| {
+                    let ((_addr, mountain, start_date), info) = item?;
+                    Ok(info)
+                })
                 .collect::<StdResult<Vec<_>>>()?
                 .into_iter()
                 .next()
-                .map(|(_start_date_sec, info)| info)  // ← ここを修正（キーは1つの要素のみ）
                 .ok_or_else(|| cosmwasm_std::StdError::not_found("ClimbingInfo"))?;
 
-
-            to_json_binary(&ClimbingInfoResponse {
-                climber,
-                mountain: info.mountain,
-                start_date: info.start_date,
-                scheduled_return_date: info.scheduled_return_date,
-                actual_return_date: info.actual_return_date,
-                deposit_amount: info.deposit_amount.to_string(),
-                deposit_denom: info.deposit_denom,
-                is_climbing: info.is_climbing,
-            })
+            to_json_binary(&info)
         }
+
          QueryMsg::ListActiveClimbs {} => {
             let active_climbs = CLIMBING_INFOS
                 .range(deps.storage, None, None, Order::Descending)
