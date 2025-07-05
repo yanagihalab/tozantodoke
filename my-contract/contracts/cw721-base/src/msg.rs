@@ -9,17 +9,20 @@ pub enum ExecuteMsg {
     SubmitClimbingInfo {
         mountain: String,
         start_date: Timestamp,
+        scheduled_return_date: Timestamp,
         deposit_amount: u128,
         deposit_denom: String,
     },
     SubmitDescentInfo {
-        return_date: Timestamp,
+        mountain: String,        // 追加
+        start_date: Timestamp,   // 追加
     },
     SubmitWarningInfo {
         nft_owner: String,
         warning_message: String,
     },
 }
+
 
 #[cw_serde]
 #[derive(QueryResponses)]
@@ -45,9 +48,11 @@ pub struct ClimbingInfoResponse {
     pub climber: String,
     pub mountain: String,
     pub start_date: Timestamp,
-    pub return_date: Option<Timestamp>,
+    pub scheduled_return_date: Timestamp,
+    pub actual_return_date: Option<Timestamp>,
     pub deposit_amount: String,
     pub deposit_denom: String,
+    pub is_climbing: bool, // 明示的に追加
 }
 
 #[cw_serde]

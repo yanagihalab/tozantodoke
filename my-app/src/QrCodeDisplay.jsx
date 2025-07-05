@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import QRCode from 'qrcode.react';
+import QRCode from 'qrcode.react'; 
 
 const mountains = [
-  "蓼科山", "北横岳", "双子山", "大岳", "雨池山", "縞枯山", "茶臼山",
+  "北横岳", "双子山", "大岳", "雨池山", "縞枯山", "茶臼山",
   "丸山", "中山", "稲子岳", "天狗岳", "根石岳", "峰の松目", "硫黄岳",
   "横岳", "八ヶ岳", "阿弥陀岳", "赤岳", "西岳", "権現岳", "編笠山"
 ];
-
+// "蓼科山",
 function roundDateToNearest10MinutesJST(date) {
   const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
   jstDate.setMinutes(Math.floor(jstDate.getMinutes() / 10) * 10, 0, 0);

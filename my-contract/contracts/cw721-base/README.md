@@ -73,8 +73,9 @@ The process is similar for cw721.
 sudo docker run --rm -v "$(pwd)":/code   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/target   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry   cosmwasm/optimizer:0.17.0
 '''
 
-neutrond tx wasm store artifacts/cw721_base.wasm --from neutron1ahx6kfl8x9ay8p09k7jgltkywatm8qvxfrguvd --gas auto --fees  8500untrn --chain-id pion-1 --node https://rpc-palvus.pion-1.ntrn.tech
-
+'''デプロイ
+neutrond tx wasm store artifacts/cw721_base.wasm --from neutron1ahx6kfl8x9ay8p09k7jgltkywatm8qvxfrguvd --gas auto --gas-adjustment 1.2 --fees  9000untrn --chain-id pion-1 --node https://rpc-palvus.pion-1.ntrn.tech
+'''
 
 admin-y@LAPTOP-GQE54E1E:~/tmp/tozantodoke/my-contract$ neutrond tx wasm store artifacts/cw721_base.wasm \
 --from neutron1ahx6kfl8x9ay8p09k7jgltkywatm8qvxfrguvd \
@@ -130,4 +131,8 @@ neutrond tx wasm instantiate 12258 '{}' \
   --chain-id pion-1 \
   --node https://rpc-palvus.pion-1.ntrn.tech
 
+-- ClimbingNFTContract
 contract address is "neutron1pl9ex24yh67l7atm4sz7j2rzs29my0p6qnxsc9nlmyaaqy2s9azqngl6hp"
+
+-- ClimbingNFTContractV1
+contract address is "neutron1mkyz6g9dvgxs4m6wp65v030nmxduzmlf4a85v45jmg9jcz5h6klskzrtqw"

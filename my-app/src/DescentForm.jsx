@@ -1,109 +1,63 @@
-import React, { useEffect, useState } from "react";
-import { SigningStargateClient } from "@cosmjs/stargate";
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 
-const rpcEndpoint = "https://rpc-palvus.pion-1.ntrn.tech";
-const chainId = "pion-1";
+const CONTRACT_ADDRESS = "neutron1mkyz6g9dvgxs4m6wp65v030nmxduzmlf4a85v45jmg9jcz5h6klskzrtqw";
+const RPC_ENDPOINT = "https://rpc-palvus.pion-1.ntrn.tech";
+const CHAIN_ID = "pion-1";
 
-function ReturnForm() {
+function SubmitForm() {
+  const location = useLocation();
+  const qrInfo = location.state?.qrInfo;
+
   const [walletInfo, setWalletInfo] = useState("");
-  const [climbDate, setClimbDate] = useState("");
-  const [climbLocation, setClimbLocation] = useState("");
-  const [depositValue, setDepositValue] = useState("");
-  const [depositDenom, setDepositDenom] = useState("");
-  const [returnDate, setReturnDate] = useState("");
-  const [txHash, setTxHash] = useState("");
 
   useEffect(() => {
-    const fetchWalletAndClimbInfo = async () => {
+    const getWalletInfo = async () => {
       if (!window.keplr) {
-        alert("Keplrをインストールしてください。");
+        alert("Keplrウォレットが見つかりません。Keplrをインストールしてください。");
         return;
       }
 
-      await window.keplr.enable(chainId);
-      const offlineSigner = window.keplr.getOfflineSigner(chainId);
+      await window.keplr.enable(CHAIN_ID);
+      const offlineSigner = window.keplr.getOfflineSigner(CHAIN_ID);
       const accounts = await offlineSigner.getAccounts();
 
-      if (accounts.length === 0) {
-        alert("ウォレットアドレスが取得できませんでした。");
-        return;
+      if (accounts && accounts.length > 0) {
+        setWalletInfo(accounts[0].address);
+      } else {
+        alert("ウォレットアドレスを取得できませんでした。");
       }
-
-      const address = accounts[0].address;
-      setWalletInfo(address);
-
-      const client = await SigningStargateClient.connect(rpcEndpoint);
-
-      // 入山時トランザクション情報の取得（アドレスのTX履歴を元に検索）
-      const txs = await client.searchTx({
-        sentFromOrTo: address,
-      });
-
-      const climbTx = txs.find(tx => {
-        // 入山TXを特定するロジック（メモや特定のタグで判断する必要あり）
-        return tx.rawLog.includes("登山届");
-      });
-
-      if (!climbTx) {
-        alert("入山情報が見つかりませんでした。");
-        return;
-      }
-
-      const climbInfo = JSON.parse(climbTx.memo); // JSONとしてmemoを使う前提
-
-      setClimbDate(climbInfo.climbDate);
-      setClimbLocation(climbInfo.climbLocation);
-      setDepositValue(climbInfo.depositValue);
-      setDepositDenom(climbInfo.depositDenom);
-      setTxHash(climbTx.hash);
     };
 
-    fetchWalletAndClimbInfo();
+    getWalletInfo();
   }, []);
 
-  const handleReturnSubmit = async () => {
-    if (!returnDate) {
-      alert("下山日を入力してください。");
+  const handleDescentSubmit = async () => {
+    const address = walletInfo;
+
+    if (!address) {
+      alert("ウォレット情報が取得できていません。");
       return;
     }
 
     if (!window.keplr) {
-      alert("Keplrをインストールしてください。");
+      alert("Keplrウォレットが見つかりません。");
       return;
     }
 
-    await window.keplr.enable(chainId);
-    const offlineSigner = window.keplr.getOfflineSigner(chainId);
-    const client = await SigningStargateClient.connectWithSigner(rpcEndpoint, offlineSigner);
+    await window.keplr.enable(CHAIN_ID);
+    const offlineSigner = window.keplr.getOfflineSigner(CHAIN_ID);
+    const client = await SigningCosmWasmClient.connectWithSigner(RPC_ENDPOINT, offlineSigner);
 
-    const txMsg = {
-      typeUrl: "/cosmos.bank.v1beta1.MsgSend",
-      value: {
-        fromAddress: walletInfo,
-        toAddress: walletInfo,
-        amount: [{ denom: depositDenom, amount: depositValue }],
-      },
+    const msg = {
+      submit_descent_info: {},
     };
 
     try {
-      const fee = { amount: [{ denom: depositDenom, amount: "1000" }], gas: "200000" };
-
-      const result = await client.signAndBroadcast(
-        walletInfo,
-        [txMsg],
-        fee,
-        JSON.stringify({
-          type: "下山届",
-          climbTxHash: txHash,
-          returnDate,
-        })
-      );
-
-      if (result.code === 0) {
-        alert("下山届を送信しました。TXハッシュ：" + result.transactionHash);
-      } else {
-        alert("TX送信エラー：" + result.rawLog);
-      }
+      const fee = { amount: [{ denom: "untrn", amount: "10000" }], gas: "200000" };
+      const result = await client.execute(address, CONTRACT_ADDRESS, msg, fee);
+      alert("下山届を送信しました。TXハッシュ：" + result.transactionHash);
     } catch (error) {
       alert("エラーが発生しました：" + error.message);
     }
@@ -118,35 +72,11 @@ function ReturnForm() {
         <input type="text" value={walletInfo} readOnly />
       </label>
 
-      <label>
-        入山日:
-        <input type="date" value={climbDate} readOnly />
-      </label>
-
-      <label>
-        登山場所:
-        <input type="text" value={climbLocation} readOnly />
-      </label>
-
-      <label>
-        Deposit返還額: {depositValue} {depositDenom}
-      </label>
-
-      <label>
-        下山日:
-        <input
-          type="date"
-          value={returnDate}
-          onChange={(e) => setReturnDate(e.target.value)}
-          min={climbDate}
-        />
-      </label>
-
-      <button type="button" onClick={handleReturnSubmit} disabled={!returnDate}>
-        下山届を提出（Deposit返還）
+      <button type="button" onClick={handleDescentSubmit}>
+        下山届を提出
       </button>
     </div>
   );
 }
 
-export default ReturnForm;
+export default SubmitForm;
