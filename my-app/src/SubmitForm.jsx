@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 
@@ -17,6 +17,13 @@ function SubmitForm() {
   const [depositValue, setDepositValue] = useState("");
   const [depositDenom, setDepositDenom] = useState("untrn");
   const [returnDate, setReturnDate] = useState("");
+
+  // ページ表示時刻を保持
+  const pageLoadTimeRef = useRef(null);
+
+  useEffect(() => {
+    pageLoadTimeRef.current = performance.now(); // ページ表示時刻を記録
+  }, []);
 
   useEffect(() => {
     const getWalletInfo = async () => {
@@ -65,7 +72,6 @@ function SubmitForm() {
     const offlineSigner = window.keplr.getOfflineSigner(CHAIN_ID);
     const client = await SigningCosmWasmClient.connectWithSigner(RPC_ENDPOINT, offlineSigner);
 
-    // UNIX秒に変換 (ナノ秒やミリ秒ではない)
     const startTimestamp = Math.floor(new Date(climbDate).getTime() / 1000).toString();
     const scheduledReturnTimestamp = Math.floor(new Date(returnDate).getTime() / 1000).toString();
 
@@ -74,20 +80,29 @@ function SubmitForm() {
         mountain,
         start_date: startTimestamp,
         scheduled_return_date: scheduledReturnTimestamp,
-        deposit_amount: depositValue.toString(), 
+        deposit_amount: depositValue.toString(),
         deposit_denom: depositDenom,
       },
     };
 
     try {
+      const txStartTime = performance.now(); // TX送信開始時刻
       const fee = { amount: [{ denom: depositDenom, amount: "10000" }], gas: "200000" };
       const result = await client.execute(address, CONTRACT_ADDRESS, msg, fee);
-      alert("入山届を送信しました。TXハッシュ：" + result.transactionHash);
+      const txEndTime = performance.now(); // TX成功時刻
+
+      const totalTimeSec = ((txEndTime - pageLoadTimeRef.current) / 1000).toFixed(2);
+      const txExecutionTimeSec = ((txEndTime - txStartTime) / 1000).toFixed(2);
+
+      alert(
+        `入山届を送信しました。\nTXハッシュ：${result.transactionHash}\n` +
+        `ページ表示からTX成功まで：${totalTimeSec}秒\n` +
+        `TX送信から成功まで：${txExecutionTimeSec}秒`
+      );
     } catch (error) {
       alert("エラーが発生しました：" + error.message);
     }
   };
-
 
   return (
     <div>

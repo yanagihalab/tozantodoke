@@ -16,6 +16,8 @@ function roundDateToNearest10MinutesJST(date) {
 function QrCodeDisplay() {
   const [mountainIndex, setMountainIndex] = useState(0);
   const [qrCodeData, setQrCodeData] = useState(null);
+  const [customText, setCustomText] = useState("");          // 入力用のstateを追加
+  const [customQrData, setCustomQrData] = useState(null);    // カスタムQRコードのstate
 
   useEffect(() => {
     const updateQrData = () => {
@@ -38,14 +40,24 @@ function QrCodeDisplay() {
 
     updateQrData();
 
-    const intervalId = setInterval(updateQrData, 60000); // ← ここを1分（60000ms）に変更
+    const intervalId = setInterval(updateQrData, 60000);
 
     return () => clearInterval(intervalId);
   }, []);
 
+  const generateCustomQr = () => {
+    setCustomQrData({
+      mountainLocation: customText,
+      startDate: roundDateToNearest10MinutesJST(new Date()),
+      depositAmount: "100",
+      depositDenom: "utrn"
+    });
+  };
+
   return (
     <div>
       <h1>疑似的な登山届QRコード表示ページ（1分間隔）</h1>
+      
       {qrCodeData ? (
         <>
           <QRCode value={JSON.stringify(qrCodeData)} size={256} />
@@ -53,6 +65,28 @@ function QrCodeDisplay() {
         </>
       ) : (
         <div>Loading...</div>
+      )}
+
+      <hr />
+
+      <h2>🔧 任意の文字列でQRコード生成</h2>
+      <input
+        type="text"
+        placeholder="任意の文字列を入力"
+        value={customText}
+        onChange={(e) => setCustomText(e.target.value)}
+        style={{ width: "300px", padding: "8px", marginBottom: "10px" }}
+      />
+      <br />
+      <button onClick={generateCustomQr} style={{ padding: "8px", cursor: "pointer" }}>
+        QRコードを生成
+      </button>
+
+      {customQrData && (
+        <div style={{ marginTop: "20px" }}>
+          <QRCode value={JSON.stringify(customQrData)} size={256} />
+          <pre>{JSON.stringify(customQrData, null, 2)}</pre>
+        </div>
       )}
     </div>
   );
